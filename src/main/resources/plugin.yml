@@ -1,0 +1,8 @@
+name: CrashPayment
+version: 1.0
+main: net.crashcraft.crashpayment.CrashPayment
+website: http://Crashcraft.net
+loadbefore: []
+description: A core that can crash
+depend: []
+api-version: 1.16
