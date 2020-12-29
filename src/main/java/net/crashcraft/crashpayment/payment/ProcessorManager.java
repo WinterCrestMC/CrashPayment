@@ -1,7 +1,7 @@
-package net.crashcraft.crashpayment.Payment;
+package net.crashcraft.crashpayment.payment;
 
-import net.crashcraft.crashpayment.Payment.providers.FakePaymentProvider;
-import net.crashcraft.crashpayment.Payment.providers.VaultPaymentProvider;
+import net.crashcraft.crashpayment.payment.providers.FakePaymentProvider;
+import net.crashcraft.crashpayment.payment.providers.VaultPaymentProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
@@ -10,12 +10,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.logging.Logger;
 
 public class ProcessorManager {
-    private final Logger logger;
-
     private PaymentProcessor processor;
 
     public ProcessorManager(JavaPlugin plugin) throws ProviderInitializationException{
-        logger = plugin.getLogger();
+        Logger logger = plugin.getLogger();
 
         ServicePriority tempPriority = null;
         PaymentProvider paymentProvider = null;
@@ -32,25 +30,22 @@ public class ProcessorManager {
 
         if (paymentProvider != null){
             logger.info("Using " + paymentProvider.getProviderIdentifier() + " as a payment processor");
-            processor = new PaymentProcessor(paymentProvider);
+            processor = new PaymentProcessor(paymentProvider, plugin);
         } else if (Bukkit.getServer().getPluginManager().getPlugin("Vault") != null){    //Try and default to vault
-            logger.info("Using Vault as a payment processor");
-            processor = new PaymentProcessor(new VaultPaymentProvider());
+            try {
+                logger.info("Using Vault as a payment processor");
+                processor = new PaymentProcessor(new VaultPaymentProvider(), plugin);
+            } catch (ProviderInitializationException e){
+                logger.severe("Vault was unable to supply a valid economy, payments will be reverted to a fake payment provider where all transactions will be approved.");
+                processor = new PaymentProcessor(new FakePaymentProvider(), plugin);
+            }
         } else {
-            logger.severe("[CrashUtils] Unable to locate a specified payment provider or default to vault. Are they installed?");
-            Bukkit.getServer().getPluginManager().disablePlugin(plugin);
+            logger.severe("No payment provider was found, payments will be reverted to a fake payment provider where all transactions will be approved.");
+            processor = new PaymentProcessor(new FakePaymentProvider(), plugin);
         }
     }
 
     public PaymentProcessor getProcessor(){
-        if (processor == null){
-            logger.severe("No payment provider was found, payments will be reverted to a fake payment provider where all transactions will be approved.");
-            try {
-                return new PaymentProcessor(new FakePaymentProvider());
-            } catch (ProviderInitializationException e){
-                logger.severe("An error occurred while initializing the fake payment provider.");
-            }
-        }
         return processor;
     }
 }

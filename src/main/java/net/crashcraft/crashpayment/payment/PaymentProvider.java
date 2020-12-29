@@ -1,4 +1,4 @@
-package net.crashcraft.crashpayment.Payment;
+package net.crashcraft.crashpayment.payment;
 
 import java.util.UUID;
 import java.util.function.Consumer;

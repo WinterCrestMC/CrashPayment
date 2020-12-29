@@ -1,4 +1,4 @@
-package net.crashcraft.crashpayment.Payment;
+package net.crashcraft.crashpayment.payment;
 
 public enum TransactionResponse {
     SUCCESS,

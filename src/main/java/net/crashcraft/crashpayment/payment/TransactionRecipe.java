@@ -1,19 +1,20 @@
-package net.crashcraft.crashpayment.Payment;
+package net.crashcraft.crashpayment.payment;
 
 import java.util.UUID;
 
 public class TransactionRecipe {
-    private UUID owner;
+    private final UUID owner;
 
-    private String comment;
-    private double amount;
+    private final String comment;
+    private final double amount;
 
-    private String transactionError;
+    private final String transactionError;
 
     public TransactionRecipe(UUID owner, double amount, String comment) {
         this.owner = owner;
         this.comment = comment;
         this.amount = amount;
+        this.transactionError = null;
     }
 
     public TransactionRecipe(UUID owner, double amount, String comment, String transactionError) {

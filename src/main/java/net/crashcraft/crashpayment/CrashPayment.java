@@ -1,23 +1,13 @@
 package net.crashcraft.crashpayment;
 
-import net.crashcraft.crashpayment.Payment.PaymentProvider;
-import net.crashcraft.crashpayment.Payment.ProcessorManager;
-import net.crashcraft.crashpayment.Payment.ProviderInitializationException;
+import net.crashcraft.crashpayment.payment.PaymentProvider;
+import net.crashcraft.crashpayment.payment.ProcessorManager;
+import net.crashcraft.crashpayment.payment.ProviderInitializationException;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CrashPayment extends JavaPlugin {
-    @Override
-    public void onLoad(){
-        getLogger().info("Loading...");
-    }
-
-    @Override
-    public void onEnable(){
-        getLogger().info("Loaded");
-    }
-
     public ProcessorManager setupPaymentProvider(JavaPlugin plugin){
         try {
             return new ProcessorManager(plugin);
@@ -29,6 +19,6 @@ public class CrashPayment extends JavaPlugin {
 
     public void register(JavaPlugin plugin, ServicePriority priority, PaymentProvider provider){
         Bukkit.getServicesManager().register(PaymentProvider.class, provider, plugin, priority);
-        plugin.getLogger().info("Registering payment provider " + provider.getProviderIdentifier());
+        plugin.getLogger().info("Registered Payment Provider [" + provider.getProviderIdentifier() + "] with priority " + priority.name());
     }
 }

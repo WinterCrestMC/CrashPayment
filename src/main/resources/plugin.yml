@@ -5,4 +5,5 @@ website: http://Crashcraft.net
 loadbefore: []
 description: A core that can crash
 depend: []
+softdepend: [Vault]
 api-version: 1.16

@@ -1,9 +1,9 @@
-package net.crashcraft.crashpayment.Payment.providers;
+package net.crashcraft.crashpayment.payment.providers;
 
-import net.crashcraft.crashpayment.Payment.PaymentProvider;
-import net.crashcraft.crashpayment.Payment.ProviderInitializationException;
-import net.crashcraft.crashpayment.Payment.TransactionRecipe;
-import net.crashcraft.crashpayment.Payment.TransactionType;
+import net.crashcraft.crashpayment.payment.PaymentProvider;
+import net.crashcraft.crashpayment.payment.ProviderInitializationException;
+import net.crashcraft.crashpayment.payment.TransactionRecipe;
+import net.crashcraft.crashpayment.payment.TransactionType;
 
 import java.util.UUID;
 import java.util.function.Consumer;
