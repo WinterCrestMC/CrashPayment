@@ -14,7 +14,7 @@ public class PaymentProcessor {
         this.plugin = plugin;
 
         if (provider == null || !provider.checkRequirements()) {
-            throw new RuntimeException("Payment processor aws null or failed requirements");
+            throw new RuntimeException("Payment processor was null or failed requirements");
         }
 
         this.provider = provider;
