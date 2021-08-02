@@ -12,8 +12,12 @@ import java.util.logging.Logger;
 public class ProcessorManager {
     private PaymentProcessor processor;
 
-    public ProcessorManager(JavaPlugin plugin) throws ProviderInitializationException{
+    public ProcessorManager(JavaPlugin plugin, String providerOverride) throws ProviderInitializationException{
         Logger logger = plugin.getLogger();
+
+        if (providerOverride == null){
+            providerOverride = "";
+        }
 
         ServicePriority tempPriority = null;
         PaymentProvider paymentProvider = null;
@@ -25,6 +29,9 @@ public class ProcessorManager {
             } else if (tempPriority.ordinal() < provider.getPriority().ordinal()){
                 tempPriority = provider.getPriority();
                 paymentProvider = provider.getProvider();
+            } else if (provider.getProvider().getProviderIdentifier().equalsIgnoreCase(providerOverride)){
+                paymentProvider = provider.getProvider();
+                break;
             }
         }
 

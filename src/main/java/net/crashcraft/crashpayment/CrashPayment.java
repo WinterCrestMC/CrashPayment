@@ -9,8 +9,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class CrashPayment extends JavaPlugin {
     public ProcessorManager setupPaymentProvider(JavaPlugin plugin){
+        return setupPaymentProvider(plugin, "");
+    }
+
+    public ProcessorManager setupPaymentProvider(JavaPlugin plugin, String providerOverride){
         try {
-            return new ProcessorManager(plugin);
+            return new ProcessorManager(plugin, providerOverride);
         } catch (ProviderInitializationException e){
             e.printStackTrace();
         }

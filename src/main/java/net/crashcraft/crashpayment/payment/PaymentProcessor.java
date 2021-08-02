@@ -57,4 +57,8 @@ public class PaymentProcessor {
             provider.getBalance(user, callback);
         });
     }
+
+    public PaymentProvider getProvider() {
+        return provider;
+    }
 }
