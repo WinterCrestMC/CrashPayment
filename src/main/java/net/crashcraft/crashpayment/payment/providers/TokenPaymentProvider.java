@@ -77,6 +77,7 @@ public class TokenPaymentProvider implements PaymentProvider {
                 inventory = player.getInventory();
                 // Find tokens that match the amount
                 int amountLeft = (int) amount;
+                int amountTaken = 0;
                 for (ItemStack item : inventory.getContents()) {
                     if (item == null || item.getType() != tokenMaterial ||
                             (item.hasItemMeta() && item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() != tokenCMD)) {
@@ -85,19 +86,20 @@ public class TokenPaymentProvider implements PaymentProvider {
                     if (item.getAmount() > amountLeft) {
                         item.setAmount(item.getAmount() - amountLeft);
                         amountLeft = 0;
+                        amountTaken = (int) amount;
                         break;
                     } else {
                         amountLeft -= item.getAmount();
+                        amountTaken += item.getAmount();
                         inventory.remove(item);
                     }
                 }
                 if (amountLeft > 0) {
                     callback.accept(new TransactionRecipe(user, amount, comment, "Not enough tokens"));
                     // Put tokens back
-                    if (amountLeft == amount) {
-                        break;
+                    if (amountTaken > 0) {
+                        inventory.addItem(CrashPayment.setCMD(tokenCMD, new ItemStack(tokenMaterial, amountTaken)));;
                     }
-                    inventory.addItem(CrashPayment.setCMD(tokenCMD, new ItemStack(tokenMaterial, amountLeft + 1)));
                     break;
                 }
         }
