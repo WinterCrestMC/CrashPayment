@@ -178,6 +178,7 @@ public class CrashPayment extends JavaPlugin {
             return items;
         }
         meta.setCustomModelData(num);
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', getInstance().getConfig().getString("token-name", "Claim Token")));
         items.setItemMeta(meta);
         return items;
     }

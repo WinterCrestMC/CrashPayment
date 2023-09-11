@@ -93,6 +93,9 @@ public class TokenPaymentProvider implements PaymentProvider {
                         amountTaken += item.getAmount();
                         inventory.remove(item);
                     }
+                    if (amountLeft == 0) {
+                        break;
+                    }
                 }
                 if (amountLeft > 0) {
                     callback.accept(new TransactionRecipe(user, amount, comment, "Not enough tokens"));
@@ -101,6 +104,8 @@ public class TokenPaymentProvider implements PaymentProvider {
                         inventory.addItem(CrashPayment.setCMD(tokenCMD, new ItemStack(tokenMaterial, amountTaken)));;
                     }
                     break;
+                } else {
+                    callback.accept(new TransactionRecipe(user, amount, comment));
                 }
         }
     }

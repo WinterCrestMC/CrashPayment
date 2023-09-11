@@ -1,3 +1,4 @@
 token-cmi-data: 10  # The number for your token
 token-material: PAPER # Spigot Material https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
 token-value: 100 # The value of the token
+token-name: Claim Token
