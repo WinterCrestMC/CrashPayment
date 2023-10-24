@@ -17,6 +17,7 @@ import net.crashcraft.crashpayment.payment.PaymentProvider;
 import net.crashcraft.crashpayment.payment.ProcessorManager;
 import net.crashcraft.crashpayment.payment.ProviderInitializationException;
 import net.crashcraft.crashpayment.payment.commands.TokenCommands;
+import net.crashcraft.crashpayment.payment.expansions.VirtualTokenExpansion;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -44,6 +45,11 @@ public class CrashPayment extends JavaPlugin {
         saveDefaultConfig();
         setupCommands();
         registerCommands();
+
+        // Register papi
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new VirtualTokenExpansion().register();
+        }
     }
 
     private void setupCommands() {
