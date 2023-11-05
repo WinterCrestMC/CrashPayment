@@ -18,6 +18,7 @@ import net.crashcraft.crashpayment.payment.ProcessorManager;
 import net.crashcraft.crashpayment.payment.ProviderInitializationException;
 import net.crashcraft.crashpayment.payment.commands.TokenCommands;
 import net.crashcraft.crashpayment.payment.expansions.VirtualTokenExpansion;
+import net.crashcraft.crashpayment.payment.rewards.RewardManager;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -39,6 +40,8 @@ public class CrashPayment extends JavaPlugin {
     private MinecraftHelp<CommandSender> minecraftHelp;
     private CommandConfirmationManager<CommandSender> confirmationManager;
     private AnnotationParser<CommandSender> annotationParser;
+    private ProcessorManager processorManager;
+    private RewardManager rewardManager;
 
     @Override
     public void onEnable() {
@@ -160,9 +163,13 @@ public class CrashPayment extends JavaPlugin {
 
     public ProcessorManager setupPaymentProvider(JavaPlugin plugin, String providerOverride){
         try {
-            return new ProcessorManager(plugin, providerOverride);
+            processorManager = new ProcessorManager(plugin, providerOverride);
+            rewardManager = new RewardManager(this);
+            return processorManager;
         } catch (ProviderInitializationException e){
-            e.printStackTrace();
+            getLogger().severe("Unable to find a valid payment provider, " +
+                    "payments will be reverted to a fake payment provider where all transactions will be approved.");
+            getLogger().severe(e.getMessage());
         }
         return null;
     }
@@ -187,5 +194,9 @@ public class CrashPayment extends JavaPlugin {
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', getInstance().getConfig().getString("token-name", "Claim Token")));
         items.setItemMeta(meta);
         return items;
+    }
+
+    public ProcessorManager getProcessorManager() {
+        return processorManager;
     }
 }

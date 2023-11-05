@@ -2,3 +2,8 @@ token-cmi-data: 10  # The number for your token
 token-material: PAPER # Spigot Material https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
 token-value: 100 # The value of the token
 token-name: Claim Token
+reward-message: "&aYou have been rewarded with tokens!"
+reward-failed-message: "&cThere was an error processing your reward, report this!"
+reward-amount: 100 # The amount of tokens to give
+reward-time-format: "1h"
+reward-check-interval: 20 # The interval to check for rewards (in ticks)
