@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -143,11 +144,14 @@ public class TokenCommands {
         sender.sendMessage("Set " + target.getName() + "'s tokens to " + amount);
     }
 
-    @CommandMethod("crashpayments check <player>")
+    @CommandMethod("crashpayments check [player]")
     @CommandDescription("Check a player's tokens")
     @CommandPermission("payments.check")
     public void checkTokens(final CommandSender sender,
-                            @NonNull @Argument(value = "player", suggestions = "player") final String player) {
+                            @Nullable @Argument(value = "player", suggestions = "player") String player) {
+        if (player == null) {
+            player = sender.getName();
+        }
         final Player target = Bukkit.getPlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
