@@ -5,6 +5,7 @@ import net.crashcraft.crashpayment.payment.PaymentProvider;
 import net.crashcraft.crashpayment.payment.TransactionResponse;
 import net.crashcraft.crashpayment.payment.TransactionType;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -41,10 +42,10 @@ public class RewardManager {
                             rewardAmount,
                             recipe -> {
                                 if (recipe.getTransactionStatus() == TransactionResponse.SUCCESS) {
-                                    player.sendMessage(Objects.requireNonNull(plugin.getConfig().getString("reward-message"))
+                                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(plugin.getConfig().getString("reward-message")))
                                             .replace("%amount%", String.valueOf(rewardAmount)));
                                 } else {
-                                    player.sendMessage(Objects.requireNonNull(plugin.getConfig().getString("reward-failed-message")));
+                                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(plugin.getConfig().getString("reward-failed-message"))));
                                 }
                             }
                     );

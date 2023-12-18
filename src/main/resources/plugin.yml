@@ -1,5 +1,5 @@
 name: CrashPayment
-version: 1.0
+version: 1.0.1
 main: net.crashcraft.crashpayment.CrashPayment
 website: http://Crashcraft.net
 loadbefore: []

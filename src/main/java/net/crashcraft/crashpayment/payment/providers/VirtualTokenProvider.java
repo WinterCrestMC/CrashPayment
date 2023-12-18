@@ -105,12 +105,20 @@ public class VirtualTokenProvider implements PaymentProvider {
     public void makeTransaction(UUID user, TransactionType type, String comment, double amount, Consumer<TransactionRecipe> callback) {
         // Due to having no way to obtain a payment processor from the main plugin, we have to load the funds.json file here.
         this.load();
+        if (amount < 0) {
+            callback.accept(new TransactionRecipe(user, amount, comment, "Negative amounts are not allowed."));
+        }
         switch (type) {
             case DEPOSIT:
                 addTokens(user, (int) amount);
                 callback.accept(new TransactionRecipe(user, amount, comment));
                 break;
             case WITHDRAW:
+                if (amount > tokens.get(user)) {
+                    // Error
+                    callback.accept(new TransactionRecipe(user, amount, comment, "Insufficient funds"));
+                    return;
+                }
                 removeTokens(user, (int) amount);
                 callback.accept(new TransactionRecipe(user, amount, comment));
                 break;
