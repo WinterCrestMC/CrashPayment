@@ -86,6 +86,24 @@ public class VirtualTokenProvider implements PaymentProvider {
         }
     }
 
+    public void setNegativeToZero() {
+        if (tokens.isEmpty()) {
+            return;
+        }
+        for (UUID uuid : tokens.keySet()) {
+            if (tokens.get(uuid) < 0) {
+                tokens.put(uuid, 0);
+            }
+        }
+    }
+
+    public void setNegativeToZero(UUID uuid) {
+        if (!tokens.containsKey(uuid)) return;
+        if (tokens.get(uuid) < 0) {
+            tokens.put(uuid, 0);
+        }
+    }
+
     @Override
     public String getProviderIdentifier() {
         return "VirtualTokenProvider";

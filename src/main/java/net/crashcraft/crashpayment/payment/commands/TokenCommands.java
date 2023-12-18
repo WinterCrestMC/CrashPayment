@@ -9,8 +9,11 @@ import cloud.commandframework.context.CommandContext;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.crashcraft.crashpayment.CrashPayment;
+import net.crashcraft.crashpayment.payment.PaymentProvider;
+import net.crashcraft.crashpayment.payment.providers.VirtualTokenProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -99,7 +102,7 @@ public class TokenCommands {
     public void giveTokens(final CommandSender sender,
                            @NonNull @Argument(value = "player", suggestions = "player") final String player,
                            @NonNull @Argument("amount") final int amount) {
-        final Player target = Bukkit.getPlayer(player);
+        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
@@ -116,7 +119,7 @@ public class TokenCommands {
     public void takeTokens(final CommandSender sender,
                            @NonNull @Argument(value = "player", suggestions = "player") final String player,
                            @NonNull @Argument("amount") final int amount) {
-        final Player target = Bukkit.getPlayer(player);
+        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
@@ -133,7 +136,7 @@ public class TokenCommands {
     public void setTokens(final CommandSender sender,
                           @NonNull @Argument(value = "player", suggestions = "player") final String player,
                           @NonNull @Argument("amount") final int amount) {
-        final Player target = Bukkit.getPlayer(player);
+        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
@@ -152,7 +155,7 @@ public class TokenCommands {
         if (player == null) {
             player = sender.getName();
         }
-        final Player target = Bukkit.getPlayer(player);
+        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
@@ -186,5 +189,26 @@ public class TokenCommands {
         tokens.put(target.getUniqueId(), tokens.getOrDefault(target.getUniqueId(), 0) + amount);
         this.save();
         sender.sendMessage("Converted " + amount + " tokens from " + target.getName());
+    }
+
+    @CommandMethod("crashpayments fix-negatives [player]")
+    @CommandDescription("Fix negative amounts from older versions")
+    @CommandPermission("payments.fix-negatives")
+    public void fixNegatives(final CommandSender sender,
+                             @Nullable @Argument(value = "player", suggestions = "player") final String player) {
+        PaymentProvider provider = plugin.getProcessorManager().getProcessor().getProvider();
+        if (provider instanceof VirtualTokenProvider) {
+            VirtualTokenProvider vtProvider = (VirtualTokenProvider) provider;
+            if (player == null) {
+                vtProvider.setNegativeToZero();
+            } else{
+                final OfflinePlayer player1 = Bukkit.getOfflinePlayer(player);
+                vtProvider.setNegativeToZero(player1.getUniqueId());
+            }
+        } else {
+            sender.sendMessage("This command it only needed for the virtual token provider, you are not using this," +
+                    "therefore you do not need it.");
+        }
+
     }
 }

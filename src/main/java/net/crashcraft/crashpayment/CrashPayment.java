@@ -199,4 +199,8 @@ public class CrashPayment extends JavaPlugin {
     public ProcessorManager getProcessorManager() {
         return processorManager;
     }
+
+    public RewardManager getRewardManager() {
+        return rewardManager;
+    }
 }
