@@ -29,12 +29,20 @@ public class VirtualTokenProvider implements PaymentProvider {
         this.load();
     }
 
+    public void setTokens(UUID uuid, int amount) {
+        tokens.put(uuid, amount);
+    }
+
     public void addTokens(UUID uuid, int amount) {
         tokens.put(uuid, tokens.getOrDefault(uuid, 0) + amount);
     }
 
     public void removeTokens(UUID uuid, int amount) {
         tokens.put(uuid, tokens.getOrDefault(uuid, 0) - amount);
+    }
+
+    public int getOrDefault(UUID uuid, int amount) {
+        return tokens.getOrDefault(uuid, amount);
     }
 
 

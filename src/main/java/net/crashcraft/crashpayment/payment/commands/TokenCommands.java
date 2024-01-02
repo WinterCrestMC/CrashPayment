@@ -34,57 +34,11 @@ import java.util.stream.Collectors;
 
 public class TokenCommands {
     private final CrashPayment plugin = CrashPayment.getInstance();
-    private final Map<UUID, Integer> tokens = new HashMap<>();
-    private final Gson gson = new Gson();
     private final Material tokenMaterial = Material.getMaterial(Objects.requireNonNull(plugin.getConfig().getString("token-material")));
     private final int tokenCMD = plugin.getConfig().getInt("token-cmi-data");
 
-    public void load() {
-        // Check if funds.json exists
-        File file = new File(plugin.getDataFolder(), "funds.json");
-        if (!file.exists()) {
-            // Create funds.json file
-            try {
-                boolean output = file.createNewFile();
-            } catch (IOException e) {
-                plugin.getLogger().severe("Failed to create funds.json");
-                plugin.getLogger().severe(e.getMessage());
-            }
-        }
-        // Read tokens from file
-        try {
-            JSONObject jsonObject = (JSONObject) new JSONParser().parse(new FileReader(file));
-            if (jsonObject == null) {
-                return;
-            }
-            for (Object key : jsonObject.keySet()) {
-                tokens.put(UUID.fromString((String) key), ((Long) jsonObject.get(key)).intValue());
-            }
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to read funds.json");
-            plugin.getLogger().severe(e.getMessage());
-        } catch (ParseException e) {
-            plugin.getLogger().severe("Failed to parse funds.json");
-            plugin.getLogger().severe(e.getMessage());
-        }
-    }
-
-    public void save() {
-        if (tokens.isEmpty()) {
-            return;
-        }
-        // Create funds.json file
-        File file = new File(plugin.getDataFolder(), "funds.json");
-        // Write tokens to file
-        try {
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write(gson.toJson(tokens));
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save funds.json");
-            plugin.getLogger().severe(e.getMessage());
-        }
+    public VirtualTokenProvider getProvider() {
+        return (VirtualTokenProvider) plugin.getProcessorManager().getProcessor().getProvider();
     }
 
 
@@ -103,14 +57,15 @@ public class TokenCommands {
     public void giveTokens(final CommandSender sender,
                            @NonNull @Argument(value = "player", suggestions = "player") final String player,
                            @NonNull @Argument("amount") final int amount) {
+        VirtualTokenProvider provider = this.getProvider();
         final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
         }
-        this.load();
-        tokens.put(target.getUniqueId(), tokens.getOrDefault(target.getUniqueId(), 0) + amount);
-        this.save();
+        provider.load();
+        provider.addTokens(target.getUniqueId(), amount);
+        provider.save();
         sender.sendMessage("Gave " + target.getName() + " " + amount + " tokens");
     }
 
@@ -120,14 +75,15 @@ public class TokenCommands {
     public void takeTokens(final CommandSender sender,
                            @NonNull @Argument(value = "player", suggestions = "player") final String player,
                            @NonNull @Argument("amount") final int amount) {
+        VirtualTokenProvider provider = this.getProvider();
         final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
         }
-        this.load();
-        tokens.put(target.getUniqueId(), tokens.getOrDefault(target.getUniqueId(), 0) - amount);
-        this.save();
+        provider.load();
+        provider.removeTokens(target.getUniqueId(), amount);
+        provider.save();
         sender.sendMessage("Took " + amount + " tokens from " + target.getName());
     }
 
@@ -137,14 +93,15 @@ public class TokenCommands {
     public void setTokens(final CommandSender sender,
                           @NonNull @Argument(value = "player", suggestions = "player") final String player,
                           @NonNull @Argument("amount") final int amount) {
+        VirtualTokenProvider provider = this.getProvider();
         final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
             return;
         }
-        this.load();
-        tokens.put(target.getUniqueId(), amount);
-        this.save();
+        provider.load();
+        provider.setTokens(target.getUniqueId(), amount);
+        provider.save();
         sender.sendMessage("Set " + target.getName() + "'s tokens to " + amount);
     }
 
@@ -153,6 +110,7 @@ public class TokenCommands {
     @CommandPermission("payments.check")
     public void checkTokens(final CommandSender sender,
                             @Nullable @Argument(value = "player", suggestions = "player") String player) {
+        VirtualTokenProvider provider = this.getProvider();
         if (player == null) {
             player = sender.getName();
         }
@@ -161,8 +119,8 @@ public class TokenCommands {
             sender.sendMessage("Player not found");
             return;
         }
-        this.load();
-        sender.sendMessage(target.getName() + " has " + tokens.getOrDefault(target.getUniqueId(), 0) + " tokens");
+        provider.load();
+        sender.sendMessage(target.getName() + " has " + provider.getOrDefault(target.getUniqueId(), 0) + " tokens");
     }
 
     @CommandMethod("crashpayments convert <player>")
@@ -170,6 +128,7 @@ public class TokenCommands {
     @CommandPermission("payments.convert")
     public void convertTokens(final CommandSender sender,
                               @NonNull @Argument(value = "player", suggestions = "player") final String player) {
+        VirtualTokenProvider provider = this.getProvider();
         final Player target = Bukkit.getPlayer(player);
         if (target == null) {
             sender.sendMessage("Player not found");
@@ -186,9 +145,9 @@ public class TokenCommands {
             amount += item.getAmount();
             inv.remove(item);
         }
-        this.load();
-        tokens.put(target.getUniqueId(), tokens.getOrDefault(target.getUniqueId(), 0) + amount);
-        this.save();
+        provider.load();
+        provider.addTokens(target.getUniqueId(), amount);
+        provider.save();
         sender.sendMessage("Converted " + amount + " tokens from " + target.getName());
     }
 
@@ -220,6 +179,7 @@ public class TokenCommands {
     public void transfer(final CommandSender sender,
                          @NonNull @Argument(value = "player", suggestions = "player") final String player,
                          @NonNull @Argument("amount") Integer amount) {
+        VirtualTokenProvider provider = this.getProvider();
         amount = Math.abs(amount); // Prevent negatives
         if (sender instanceof Player) {
             final Player target = Bukkit.getPlayer(player);
@@ -227,15 +187,14 @@ public class TokenCommands {
                 sender.sendMessage("Player not found");
                 return;
             }
-            this.load();
+            provider.load();
             final UUID uuid = ((Player) sender).getUniqueId();
-            if (tokens.getOrDefault(uuid, 0) < amount) {
+            if (provider.getOrDefault(uuid, 0) < amount) {
                 sender.sendMessage("You do not have enough tokens");
                 return;
             }
-            tokens.put(uuid, 0);
-            tokens.put(target.getUniqueId(), tokens.getOrDefault(target.getUniqueId(), 0) + amount);
-            this.save();
+            provider.addTokens(target.getUniqueId(), amount);
+            provider.save();
             sender.sendMessage("Transferred " + amount + " tokens to " + target.getName());
         } else {
             sender.sendMessage("This command can only be run by a player");
