@@ -95,6 +95,7 @@ public class VirtualTokenProvider implements PaymentProvider {
                 tokens.put(uuid, 0);
             }
         }
+        this.save();
     }
 
     public void setNegativeToZero(UUID uuid) {
@@ -102,6 +103,7 @@ public class VirtualTokenProvider implements PaymentProvider {
         if (tokens.get(uuid) < 0) {
             tokens.put(uuid, 0);
         }
+        this.save();
     }
 
     @Override
