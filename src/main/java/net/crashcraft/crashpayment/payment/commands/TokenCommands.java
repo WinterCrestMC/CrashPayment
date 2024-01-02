@@ -20,6 +20,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -205,10 +206,39 @@ public class TokenCommands {
                 final OfflinePlayer player1 = Bukkit.getOfflinePlayer(player);
                 vtProvider.setNegativeToZero(player1.getUniqueId());
             }
+            sender.sendMessage("Action complete.");
         } else {
             sender.sendMessage("This command it only needed for the virtual token provider, you are not using this," +
                     "therefore you do not need it.");
         }
 
+    }
+
+    @CommandMethod("crashpayments transfer <player> <amount>")
+    @CommandDescription("Transfer funds from your bank to another players")
+    @CommandPermission("payments.transfer")
+    public void transfer(final CommandSender sender,
+                         @NonNull @Argument(value = "player", suggestions = "player") final String player,
+                         @NonNull @Argument("amount") Integer amount) {
+        amount = Math.abs(amount); // Prevent negatives
+        if (sender instanceof Player) {
+            final Player target = Bukkit.getPlayer(player);
+            if (target == null) {
+                sender.sendMessage("Player not found");
+                return;
+            }
+            this.load();
+            final UUID uuid = ((Player) sender).getUniqueId();
+            if (tokens.getOrDefault(uuid, 0) < amount) {
+                sender.sendMessage("You do not have enough tokens");
+                return;
+            }
+            tokens.put(uuid, 0);
+            tokens.put(target.getUniqueId(), tokens.getOrDefault(target.getUniqueId(), 0) + amount);
+            this.save();
+            sender.sendMessage("Transferred " + amount + " tokens to " + target.getName());
+        } else {
+            sender.sendMessage("This command can only be run by a player");
+        }
     }
 }
