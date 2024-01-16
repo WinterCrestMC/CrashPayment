@@ -180,22 +180,30 @@ public class TokenCommands {
                          @NonNull @Argument(value = "player", suggestions = "player") final String player,
                          @NonNull @Argument("amount") Integer amount) {
         VirtualTokenProvider provider = this.getProvider();
-        amount = Math.abs(amount); // Prevent negatives
+        if (amount <= 0) {
+            sender.sendMessage("Amount must be greater than 0");
+            return;
+        }
         if (sender instanceof Player) {
-            final Player target = Bukkit.getPlayer(player);
-            if (target == null) {
+            final Player targetPlayer = Bukkit.getPlayer(player);
+            if (targetPlayer == null) {
                 sender.sendMessage("Player not found");
                 return;
             }
+            if (targetPlayer.getUniqueId().equals(((Player) sender).getUniqueId())) {
+                sender.sendMessage("You cannot transfer to yourself");
+                return;
+            }
             provider.load();
-            final UUID uuid = ((Player) sender).getUniqueId();
-            if (provider.getOrDefault(uuid, 0) < amount) {
+            final UUID senderUUID = ((Player) sender).getUniqueId();
+            if (provider.getOrDefault(senderUUID, 0) < amount) {
                 sender.sendMessage("You do not have enough tokens");
                 return;
             }
-            provider.addTokens(target.getUniqueId(), amount);
+            provider.addTokens(targetPlayer.getUniqueId(), amount);
+            provider.removeTokens(senderUUID, amount);
             provider.save();
-            sender.sendMessage("Transferred " + amount + " tokens to " + target.getName());
+            sender.sendMessage("Transferred " + amount + " tokens to " + targetPlayer.getName());
         } else {
             sender.sendMessage("This command can only be run by a player");
         }
