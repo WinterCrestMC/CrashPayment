@@ -15,9 +15,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class VirtualTokenProvider implements PaymentProvider {
     private final CrashPayment plugin;
@@ -43,6 +45,28 @@ public class VirtualTokenProvider implements PaymentProvider {
 
     public int getOrDefault(UUID uuid, int amount) {
         return tokens.getOrDefault(uuid, amount);
+    }
+
+
+    /**
+     * Get Top users
+     * @param amount amount of users to get
+     * @return top users
+     */
+    public List<UUID> getTopUsers(int amount) {
+        return tokens.entrySet().stream()
+                .sorted(Map.Entry.<UUID, Integer>comparingByValue().reversed())
+                .limit(amount)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get Top 5 users
+     * @return top 5 users
+     */
+    public List<UUID> getTopUsers() {
+        return getTopUsers(5);
     }
 
 

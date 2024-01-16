@@ -208,4 +208,25 @@ public class TokenCommands {
             sender.sendMessage("This command can only be run by a player");
         }
     }
+
+    @CommandMethod("crashpayments top [amount]")
+    @CommandDescription("View the top players")
+    @CommandPermission("payments.top")
+    public void top(final CommandSender sender,
+                    @Nullable @Argument(value = "amount") final Integer amount) {
+        VirtualTokenProvider provider = this.getProvider();
+        provider.load();
+        List<UUID> topUsers;
+        if (amount == null) {
+            topUsers = provider.getTopUsers();
+        } else {
+            topUsers = provider.getTopUsers(amount);
+        }
+        sender.sendMessage("Top users:");
+        for (int i = 0; i < topUsers.size(); i++) {
+            final UUID uuid = topUsers.get(i);
+            final OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+            sender.sendMessage((i + 1) + ". " + player.getName() + " - " + provider.getOrDefault(uuid, 0));
+        }
+    }
 }
