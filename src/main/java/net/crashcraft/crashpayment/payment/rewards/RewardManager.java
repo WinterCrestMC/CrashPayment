@@ -54,11 +54,6 @@ public class RewardManager {
                 rewardCooldown.put(player, System.currentTimeMillis()/1000);
             }
         }
-        for (Player player : rewardCooldown.keySet()) {
-            if (!player.isOnline()) {
-                rewardCooldown.remove(player);
-            }
-        }
     }
 
 
