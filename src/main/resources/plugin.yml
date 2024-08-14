@@ -6,4 +6,32 @@ loadbefore: []
 description: A core that can crash
 depend: []
 softdepend: [Vault, PlaceholderAPI]
-api-version: 1.16
+api-version: 1.19
+commands:
+  crashpayments:
+    description: Main command for CrashPayment
+permissions:
+  payments.give:
+    description: Give tokens to a player
+    default: op
+  payments.take:
+    description: Take tokens from a player
+    default: op
+  payments.set:
+    description: Set a player's tokens
+    default: op
+  payments.check:
+    description: Check a player's tokens
+    default: op
+  payments.convert:
+    description: Convert a player's tokens
+    default: op
+  payments.fix-negatives:
+    description: Fix negative token values
+    default: op
+  payments.transfer:
+    description: Transfer tokens between players
+    default: op
+  payments.top:
+    description: View the top token holders
+    default: op

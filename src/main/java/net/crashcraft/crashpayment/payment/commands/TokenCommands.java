@@ -1,232 +1,223 @@
 package net.crashcraft.crashpayment.payment.commands;
 
-import cloud.commandframework.annotations.Argument;
-import cloud.commandframework.annotations.CommandDescription;
-import cloud.commandframework.annotations.CommandMethod;
-import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.suggestions.Suggestions;
-import cloud.commandframework.context.CommandContext;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import net.crashcraft.crashpayment.CrashPayment;
-import net.crashcraft.crashpayment.payment.PaymentProvider;
 import net.crashcraft.crashpayment.payment.providers.VirtualTokenProvider;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class TokenCommands {
+
+public class TokenCommands implements CommandExecutor {
     private final CrashPayment plugin = CrashPayment.getInstance();
     private final Material tokenMaterial = Material.getMaterial(Objects.requireNonNull(plugin.getConfig().getString("token-material")));
     private final int tokenCMD = plugin.getConfig().getInt("token-cmi-data");
+    private static final String GIVE_PERMISSION = "payments.give";
+    private static final String TAKE_PERMISSION = "payments.take";
+    private static final String SET_PERMISSION = "payments.set";
+    private static final String CHECK_PERMISSION = "payments.check";
+    private static final String CONVERT_PERMISSION = "payments.convert";
+    private static final String FIX_NEGATIVES_PERMISSION = "payments.fix-negatives";
+    private static final String TRANSFER_PERMISSION = "payments.transfer";
+    private static final String TOP_PERMISSION = "payments.top";
 
     public VirtualTokenProvider getProvider() {
         return (VirtualTokenProvider) plugin.getProcessorManager().getProcessor().getProvider();
     }
 
+    /*
+    crashpayments give <player> <amount>
+    crashpayments take <player> <amount>
+    crashpayments set <player> <amount>
+    crashpayments check [player]
+    crashpayments convert <player>
+    crashpayments fix-negatives [player]
+    crashpayments transfer <player> <amount>
+    crashpayments top [amount]
+     */
 
-    @Suggestions("player")
-    public List<String> playerSuggestions(final CommandContext<CommandSender> sender, final String input) {
-        return CrashPayment.getInstance().getServer().getOnlinePlayers().stream()
-                .map(Player::getName)
-                .filter(name -> name.toLowerCase().startsWith(input.toLowerCase()))
-                .collect(Collectors.toList());
-    }
+    @Override
+    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+        if (args.length == 0) {
+            return false;
+        }
 
-    @SuppressWarnings("DataFlowIssue")  // We know that the various items aren't NULL else the plugin wouldn't load.
-    @CommandMethod("crashpayments give <player> <amount>")
-    @CommandDescription("Give a player tokens")
-    @CommandPermission("payments.give")
-    public void giveTokens(final CommandSender sender,
-                           @NonNull @Argument(value = "player", suggestions = "player") final String player,
-                           @NonNull @Argument("amount") final int amount) {
-        VirtualTokenProvider provider = this.getProvider();
-        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
-        if (target == null) {
-            sender.sendMessage("Player not found");
-            return;
-        }
-        provider.load();
-        provider.addTokens(target.getUniqueId(), amount);
-        provider.save();
-        sender.sendMessage("Gave " + target.getName() + " " + amount + " tokens");
-    }
-
-    @CommandMethod("crashpayments take <player> <amount>")
-    @CommandDescription("Take tokens from a player")
-    @CommandPermission("payments.take")
-    public void takeTokens(final CommandSender sender,
-                           @NonNull @Argument(value = "player", suggestions = "player") final String player,
-                           @NonNull @Argument("amount") final int amount) {
-        VirtualTokenProvider provider = this.getProvider();
-        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
-        if (target == null) {
-            sender.sendMessage("Player not found");
-            return;
-        }
-        provider.load();
-        provider.removeTokens(target.getUniqueId(), amount);
-        provider.save();
-        sender.sendMessage("Took " + amount + " tokens from " + target.getName());
-    }
-
-    @CommandMethod("crashpayments set <player> <amount>")
-    @CommandDescription("Set a player's tokens")
-    @CommandPermission("payments.set")
-    public void setTokens(final CommandSender sender,
-                          @NonNull @Argument(value = "player", suggestions = "player") final String player,
-                          @NonNull @Argument("amount") final int amount) {
-        VirtualTokenProvider provider = this.getProvider();
-        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
-        if (target == null) {
-            sender.sendMessage("Player not found");
-            return;
-        }
-        provider.load();
-        provider.setTokens(target.getUniqueId(), amount);
-        provider.save();
-        sender.sendMessage("Set " + target.getName() + "'s tokens to " + amount);
-    }
-
-    @CommandMethod("crashpayments check [player]")
-    @CommandDescription("Check a player's tokens")
-    @CommandPermission("payments.check")
-    public void checkTokens(final CommandSender sender,
-                            @Nullable @Argument(value = "player", suggestions = "player") String player) {
-        VirtualTokenProvider provider = this.getProvider();
-        if (player == null) {
-            player = sender.getName();
-        }
-        final OfflinePlayer target = Bukkit.getOfflinePlayer(player);
-        if (target == null) {
-            sender.sendMessage("Player not found");
-            return;
-        }
-        provider.load();
-        sender.sendMessage(target.getName() + " has " + provider.getOrDefault(target.getUniqueId(), 0) + " tokens");
-    }
-
-    @CommandMethod("crashpayments convert <player>")
-    @CommandDescription("Convert a player's physical tokens to their virtual tokens")
-    @CommandPermission("payments.convert")
-    public void convertTokens(final CommandSender sender,
-                              @NonNull @Argument(value = "player", suggestions = "player") final String player) {
-        VirtualTokenProvider provider = this.getProvider();
-        final Player target = Bukkit.getPlayer(player);
-        if (target == null) {
-            sender.sendMessage("Player not found");
-            return;
-        }
-        Inventory inv = target.getInventory();
-        int amount = 0;
-        for (ItemStack item : inv.getContents()) {
-            if (item == null || item.getType() != tokenMaterial ||
-                    (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasCustomModelData()
-                            && item.getItemMeta().getCustomModelData() != tokenCMD)) {
-                continue;
+        switch (args[0].toLowerCase()) {
+            case "give" -> {
+                if (args.length != 3) {
+                    return true;
+                }
+                if (!commandSender.hasPermission(GIVE_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (player == null) {
+                    commandSender.sendMessage("Player not found");
+                    return true;
+                }
+                final UUID target = player.getUniqueId();
+                provider.load();
+                provider.addTokens(target, Integer.parseInt(args[2]));
+                provider.save();
+                commandSender.sendMessage("Gave " + args[1] + " " + args[2] + " tokens");
+                return true;
             }
-            amount += item.getAmount();
-            inv.remove(item);
-        }
-        provider.load();
-        provider.addTokens(target.getUniqueId(), amount);
-        provider.save();
-        sender.sendMessage("Converted " + amount + " tokens from " + target.getName());
-    }
-
-    @CommandMethod("crashpayments fix-negatives [player]")
-    @CommandDescription("Fix negative amounts from older versions")
-    @CommandPermission("payments.fix-negatives")
-    public void fixNegatives(final CommandSender sender,
-                             @Nullable @Argument(value = "player", suggestions = "player") final String player) {
-        PaymentProvider provider = plugin.getProcessorManager().getProcessor().getProvider();
-        if (provider instanceof VirtualTokenProvider) {
-            VirtualTokenProvider vtProvider = (VirtualTokenProvider) provider;
-            if (player == null) {
-                vtProvider.setNegativeToZero();
-            } else{
-                final OfflinePlayer player1 = Bukkit.getOfflinePlayer(player);
-                vtProvider.setNegativeToZero(player1.getUniqueId());
+            case "take" -> {
+                if (args.length != 3) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(TAKE_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (player == null) {
+                    commandSender.sendMessage("Player not found");
+                    return true;
+                }
+                final UUID target = player.getUniqueId();
+                provider.load();
+                provider.removeTokens(target, Integer.parseInt(args[2]));
+                provider.save();
+                commandSender.sendMessage("Took " + args[2] + " tokens from " + args[1]);
+                return true;
             }
-            sender.sendMessage("Action complete.");
-        } else {
-            sender.sendMessage("This command it only needed for the virtual token provider, you are not using this," +
-                    "therefore you do not need it.");
+            case "set" -> {
+                if (args.length != 3) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(SET_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (player == null) {
+                    commandSender.sendMessage("Player not found");
+                    return true;
+                }
+                final UUID target = player.getUniqueId();
+                provider.load();
+                provider.setTokens(target, Integer.parseInt(args[2]));
+                provider.save();
+                commandSender.sendMessage("Set " + args[1] + "'s tokens to " + args[2]);
+                return true;
+            }
+            case "check" -> {
+                if (args.length != 2) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(CHECK_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (player == null) {
+                    commandSender.sendMessage("Player not found");
+                    return true;
+                }
+                final UUID target = player.getUniqueId();
+                provider.load();
+                commandSender.sendMessage(args[1] + " has " + provider.getOrDefault(target, 0) + " tokens");
+                return true;
+            }
+            case "convert" -> {
+                if (args.length != 2) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(CONVERT_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (player == null) {
+                    commandSender.sendMessage("Player not found");
+                    return true;
+                }
+                final UUID target = player.getUniqueId();
+                provider.load();
+                Inventory inv = plugin.getServer().getPlayer(args[1]).getInventory();
+                int amount = 0;
+                for (ItemStack item : inv.getContents()) {
+                    if (item == null || item.getType() != tokenMaterial ||
+                            (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasCustomModelData()
+                                    && item.getItemMeta().getCustomModelData() != tokenCMD)) {
+                        continue;
+                    }
+                    amount += item.getAmount();
+                    inv.remove(item);
+                }
+                provider.addTokens(target, amount);
+                provider.save();
+                commandSender.sendMessage("Converted " + amount + " tokens from " + args[1]);
+                return true;
+            }
+            case "fix-negatives" -> {
+                if (args.length > 2) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(FIX_NEGATIVES_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                if (args.length == 1) {
+                    provider.setNegativeToZero();
+                } else {
+                    final Player player = plugin.getServer().getPlayer(args[1]);
+                    if (player == null) {
+                        commandSender.sendMessage("Player not found");
+                        return true;
+                    }
+                    final UUID target = player.getUniqueId();
+                    provider.setNegativeToZero(target);
+                }
+                commandSender.sendMessage("Action complete.");
+                return true;
+            }
+            case "transfer" -> {
+                if (args.length != 3) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(TRANSFER_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (player == null) {
+                    commandSender.sendMessage("Player not found");
+                    return true;
+                }
+                if (player.getUniqueId().equals(((Player) commandSender).getUniqueId())) {
+                    commandSender.sendMessage("You cannot transfer to yourself");
+                    return true;
+                }
+                provider.load();
+                final UUID senderUUID = ((Player) commandSender).getUniqueId();
+                if (provider.getOrDefault(senderUUID, 0) < Integer.parseInt(args[2])) {
+                    commandSender.sendMessage("You do not have enough tokens");
+                    return true;
+                }
+                provider.addTokens(player.getUniqueId(), Integer.parseInt(args[2]));
+                provider.removeTokens(senderUUID, Integer.parseInt(args[2]));
+                provider.save();
+                commandSender.sendMessage("Transferred " + args[2] + " tokens to " + args[1]);
+                return true;
+            }
+            case "top" -> {
+                if (args.length > 2) {
+                    return false;
+                }
+                if (!commandSender.hasPermission(TOP_PERMISSION)) return true;
+                VirtualTokenProvider provider = this.getProvider();
+                provider.load();
+                List<UUID> topUsers;
+                if (args.length == 1) {
+                    topUsers = provider.getTopUsers();
+                } else {
+                    topUsers = provider.getTopUsers(Integer.parseInt(args[1]));
+                }
+                commandSender.sendMessage("Top users:");
+                for (int i = 0; i < topUsers.size(); i++) {
+                    final UUID uuid = topUsers.get(i);
+                    final Player player = plugin.getServer().getPlayer(uuid);
+                    commandSender.sendMessage((i + 1) + ". " + player.getName() + " - " + provider.getOrDefault(uuid, 0));
+                }
+                return true;
+            }
         }
 
-    }
-
-    @CommandMethod("crashpayments transfer <player> <amount>")
-    @CommandDescription("Transfer funds from your bank to another players")
-    @CommandPermission("payments.transfer")
-    public void transfer(final CommandSender sender,
-                         @NonNull @Argument(value = "player", suggestions = "player") final String player,
-                         @NonNull @Argument("amount") Integer amount) {
-        VirtualTokenProvider provider = this.getProvider();
-        if (amount <= 0) {
-            sender.sendMessage("Amount must be greater than 0");
-            return;
-        }
-        if (sender instanceof Player) {
-            final Player targetPlayer = Bukkit.getPlayer(player);
-            if (targetPlayer == null) {
-                sender.sendMessage("Player not found");
-                return;
-            }
-            if (targetPlayer.getUniqueId().equals(((Player) sender).getUniqueId())) {
-                sender.sendMessage("You cannot transfer to yourself");
-                return;
-            }
-            provider.load();
-            final UUID senderUUID = ((Player) sender).getUniqueId();
-            if (provider.getOrDefault(senderUUID, 0) < amount) {
-                sender.sendMessage("You do not have enough tokens");
-                return;
-            }
-            provider.addTokens(targetPlayer.getUniqueId(), amount);
-            provider.removeTokens(senderUUID, amount);
-            provider.save();
-            sender.sendMessage("Transferred " + amount + " tokens to " + targetPlayer.getName());
-        } else {
-            sender.sendMessage("This command can only be run by a player");
-        }
-    }
-
-    @CommandMethod("crashpayments top [amount]")
-    @CommandDescription("View the top players")
-    @CommandPermission("payments.top")
-    public void top(final CommandSender sender,
-                    @Nullable @Argument(value = "amount") final Integer amount) {
-        VirtualTokenProvider provider = this.getProvider();
-        provider.load();
-        List<UUID> topUsers;
-        if (amount == null) {
-            topUsers = provider.getTopUsers();
-        } else {
-            topUsers = provider.getTopUsers(amount);
-        }
-        sender.sendMessage("Top users:");
-        for (int i = 0; i < topUsers.size(); i++) {
-            final UUID uuid = topUsers.get(i);
-            final OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-            sender.sendMessage((i + 1) + ". " + player.getName() + " - " + provider.getOrDefault(uuid, 0));
-        }
+        return false;
     }
 }

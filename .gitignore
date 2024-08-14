@@ -2,3 +2,5 @@ Server/
 target/
 CrashUtils.iml
 .idea/
+/build/
+/.gradle/
