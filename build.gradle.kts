@@ -1,6 +1,6 @@
 plugins {
-    `java-library`
-    `maven-publish`
+    id("java")
+    id("xyz.jpenilla.run-paper") version "2.0.0"
 }
 
 repositories {
@@ -47,20 +47,20 @@ repositories {
 }
 
 dependencies {
-    api(libs.net.kyori.adventure.api)
-    api(libs.net.kyori.adventure.platform.bukkit)
-    api(libs.com.google.code.gson.gson)
+    compileOnly("net.kyori:adventure-api:4.17.0")
+    compileOnly("net.kyori:adventure-platform-bukkit:4.3.3")
+    compileOnly("com.google.code.gson:gson:2.11.0")
     compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
-    compileOnly(libs.com.github.milkbowl.vaultapi)
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("me.clip:placeholderapi:2.11.6")
+}
+
+tasks {
+    runServer {
+        minecraftVersion("1.21.1")
+    }
 }
 
 group = "net.crashcraft"
 version = "1.0.2"
 description = "CrashPayment"
-
-publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
-    }
-}

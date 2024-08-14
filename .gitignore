@@ -4,3 +4,5 @@ CrashUtils.iml
 .idea/
 /build/
 /.gradle/
+/run/
+/run/cache/
