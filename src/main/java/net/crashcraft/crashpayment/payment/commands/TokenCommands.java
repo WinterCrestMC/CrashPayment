@@ -43,96 +43,94 @@ public class TokenCommands implements CommandExecutor {
      */
 
     @Override
-    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
             return false;
         }
 
+        Player player = sender instanceof Player ? (Player) sender : null;
+
         switch (args[0].toLowerCase()) {
             case "give" -> {
-                if (args.length != 3) {
-                    return true;
-                }
-                if (!commandSender.hasPermission(GIVE_PERMISSION)) return true;
+                if (!sender.hasPermission(GIVE_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
-                final Player player = plugin.getServer().getPlayer(args[1]);
+                player = plugin.getServer().getPlayer(args[1]);
                 if (player == null) {
-                    commandSender.sendMessage("Player not found");
+                    sender.sendMessage("Player not found");
                     return true;
                 }
                 final UUID target = player.getUniqueId();
                 provider.load();
                 provider.addTokens(target, Integer.parseInt(args[2]));
                 provider.save();
-                commandSender.sendMessage("Gave " + args[1] + " " + args[2] + " tokens");
+                sender.sendMessage("Gave " + args[1] + " " + args[2] + " tokens");
                 return true;
             }
             case "take" -> {
                 if (args.length != 3) {
                     return false;
                 }
-                if (!commandSender.hasPermission(TAKE_PERMISSION)) return true;
+                if (!sender.hasPermission(TAKE_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
-                final Player player = plugin.getServer().getPlayer(args[1]);
+                player = plugin.getServer().getPlayer(args[1]);
                 if (player == null) {
-                    commandSender.sendMessage("Player not found");
+                    sender.sendMessage("Player not found");
                     return true;
                 }
                 final UUID target = player.getUniqueId();
                 provider.load();
                 provider.removeTokens(target, Integer.parseInt(args[2]));
                 provider.save();
-                commandSender.sendMessage("Took " + args[2] + " tokens from " + args[1]);
+                sender.sendMessage("Took " + args[2] + " tokens from " + args[1]);
                 return true;
             }
             case "set" -> {
                 if (args.length != 3) {
                     return false;
                 }
-                if (!commandSender.hasPermission(SET_PERMISSION)) return true;
+                if (!sender.hasPermission(SET_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
-                final Player player = plugin.getServer().getPlayer(args[1]);
+                player = plugin.getServer().getPlayer(args[1]);
                 if (player == null) {
-                    commandSender.sendMessage("Player not found");
+                    sender.sendMessage("Player not found");
                     return true;
                 }
                 final UUID target = player.getUniqueId();
                 provider.load();
                 provider.setTokens(target, Integer.parseInt(args[2]));
                 provider.save();
-                commandSender.sendMessage("Set " + args[1] + "'s tokens to " + args[2]);
+                sender.sendMessage("Set " + args[1] + "'s tokens to " + args[2]);
                 return true;
             }
             case "check" -> {
-                if (args.length != 2) {
-                    return false;
-                }
-                if (!commandSender.hasPermission(CHECK_PERMISSION)) return true;
+                if (!sender.hasPermission(CHECK_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
-                final Player player = plugin.getServer().getPlayer(args[1]);
+
+                if (args.length >= 2) {
+                    player = plugin.getServer().getPlayer(args[1]);
+                }
                 if (player == null) {
-                    commandSender.sendMessage("Player not found");
+                    sender.sendMessage("Player not found!");
                     return true;
                 }
                 final UUID target = player.getUniqueId();
                 provider.load();
-                commandSender.sendMessage(args[1] + " has " + provider.getOrDefault(target, 0) + " tokens");
+                sender.sendMessage(player.getName() + " has " + provider.getOrDefault(target, 0) + " tokens");
                 return true;
             }
             case "convert" -> {
-                if (args.length != 2) {
-                    return false;
-                }
-                if (!commandSender.hasPermission(CONVERT_PERMISSION)) return true;
+                if (!sender.hasPermission(CONVERT_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
-                final Player player = plugin.getServer().getPlayer(args[1]);
+                if (args.length > 2) {
+                    player = plugin.getServer().getPlayer(args[1]);
+                }
                 if (player == null) {
-                    commandSender.sendMessage("Player not found");
+                    sender.sendMessage("Player not found");
                     return true;
                 }
                 final UUID target = player.getUniqueId();
                 provider.load();
-                Inventory inv = plugin.getServer().getPlayer(args[1]).getInventory();
+                Inventory inv = player.getInventory();
                 int amount = 0;
                 for (ItemStack item : inv.getContents()) {
                     if (item == null || item.getType() != tokenMaterial ||
@@ -145,74 +143,73 @@ public class TokenCommands implements CommandExecutor {
                 }
                 provider.addTokens(target, amount);
                 provider.save();
-                commandSender.sendMessage("Converted " + amount + " tokens from " + args[1]);
+                sender.sendMessage("Converted " + amount + " tokens from " + player.getName());
                 return true;
             }
             case "fix-negatives" -> {
                 if (args.length > 2) {
                     return false;
                 }
-                if (!commandSender.hasPermission(FIX_NEGATIVES_PERMISSION)) return true;
+                if (!sender.hasPermission(FIX_NEGATIVES_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
                 if (args.length == 1) {
                     provider.setNegativeToZero();
                 } else {
-                    final Player player = plugin.getServer().getPlayer(args[1]);
+                    player = plugin.getServer().getPlayer(args[1]);
                     if (player == null) {
-                        commandSender.sendMessage("Player not found");
+                        sender.sendMessage("Player not found");
                         return true;
                     }
                     final UUID target = player.getUniqueId();
                     provider.setNegativeToZero(target);
                 }
-                commandSender.sendMessage("Action complete.");
+                sender.sendMessage("Action complete.");
                 return true;
             }
             case "transfer" -> {
-                if (args.length != 3) {
-                    return false;
-                }
-                if (!commandSender.hasPermission(TRANSFER_PERMISSION)) return true;
+                if (!sender.hasPermission(TRANSFER_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
-                final Player player = plugin.getServer().getPlayer(args[1]);
-                if (player == null) {
-                    commandSender.sendMessage("Player not found");
+                Player target = plugin.getServer().getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage("Player not found. Please make sure the player is online.");
                     return true;
                 }
-                if (player.getUniqueId().equals(((Player) commandSender).getUniqueId())) {
-                    commandSender.sendMessage("You cannot transfer to yourself");
+                if (target.getUniqueId().equals((player.getUniqueId()))) {
+                    sender.sendMessage("You cannot transfer to yourself!");
                     return true;
                 }
                 provider.load();
-                final UUID senderUUID = ((Player) commandSender).getUniqueId();
+                final UUID senderUUID = player.getUniqueId();
                 if (provider.getOrDefault(senderUUID, 0) < Integer.parseInt(args[2])) {
-                    commandSender.sendMessage("You do not have enough tokens");
+                    sender.sendMessage("You do not have enough tokens");
                     return true;
                 }
-                provider.addTokens(player.getUniqueId(), Integer.parseInt(args[2]));
+                provider.addTokens(target.getUniqueId(), Integer.parseInt(args[2]));
                 provider.removeTokens(senderUUID, Integer.parseInt(args[2]));
                 provider.save();
-                commandSender.sendMessage("Transferred " + args[2] + " tokens to " + args[1]);
+                sender.sendMessage("Transferred " + args[2] + " tokens to " + args[1]);
                 return true;
             }
             case "top" -> {
-                if (args.length > 2) {
-                    return false;
-                }
-                if (!commandSender.hasPermission(TOP_PERMISSION)) return true;
+                if (!sender.hasPermission(TOP_PERMISSION)) return true;
                 VirtualTokenProvider provider = this.getProvider();
                 provider.load();
                 List<UUID> topUsers;
                 if (args.length == 1) {
                     topUsers = provider.getTopUsers();
                 } else {
-                    topUsers = provider.getTopUsers(Integer.parseInt(args[1]));
+                    int amount = Integer.parseInt(args[1]);
+                    if (amount >= 50) {
+                        sender.sendMessage("Amount must be less than 50");
+                        return true;
+                    }
+                    topUsers = provider.getTopUsers();
                 }
-                commandSender.sendMessage("Top users:");
+                sender.sendMessage("Top users:");
                 for (int i = 0; i < topUsers.size(); i++) {
                     final UUID uuid = topUsers.get(i);
-                    final Player player = plugin.getServer().getPlayer(uuid);
-                    commandSender.sendMessage((i + 1) + ". " + player.getName() + " - " + provider.getOrDefault(uuid, 0));
+                    player = plugin.getServer().getPlayer(uuid);
+                    sender.sendMessage((i + 1) + ". " + player.getName() + " - " + provider.getOrDefault(uuid, 0));
                 }
                 return true;
             }

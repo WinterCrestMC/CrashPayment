@@ -25,8 +25,6 @@ public class CrashPayment extends JavaPlugin {
         getServer().getPluginCommand("crashpayments").setExecutor(new TokenCommands());
         getServer().getPluginCommand("crashpayments").setTabCompleter(new TokenCommandsTabComplete());
 
-        setupPaymentProvider(this);
-
         // Register papi
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new VirtualTokenExpansion().register();

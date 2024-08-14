@@ -98,7 +98,6 @@ public class VirtualTokenProvider implements PaymentProvider {
         } catch (ParseException e) {
             plugin.getLogger().severe("Failed to parse funds.json");
             plugin.getLogger().severe(e.getMessage());
-            e.printStackTrace();
         }
     }
 
