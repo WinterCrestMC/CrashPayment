@@ -1,6 +1,9 @@
+import xyz.jpenilla.runtask.RunExtension
+
 plugins {
     id("java")
     id("xyz.jpenilla.run-paper") version "2.0.0"
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 repositories {
@@ -53,12 +56,36 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("me.clip:placeholderapi:2.11.6")
+
+    implementation("dev.jorel:commandapi-bukkit-shade:9.7.0")
+}
+
+
+
+tasks.shadowJar {
+    dependencies {
+        include(dependency("dev.jorel:commandapi-bukkit-shade:9.7.0"))
+    }
+
+    relocate("dev.jorel.commandapi", "net.crashcraft.crashpayment.commandapi")
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
 
 tasks {
     runServer {
-        minecraftVersion("1.21.1")
+        minecraftVersion("1.21.4")
+        dependsOn(shadowJar)
+
+        pluginJars(shadowJar.get().archiveFile.filter { it.asFile.name.contains("-all") })
+        // args("-add-plugin=${outputs.files.files.filter { it.name.contains("-all")}}")
     }
+}
+
+extensions.configure<RunExtension> {
+    disablePluginJarDetection()
 }
 
 group = "net.crashcraft"

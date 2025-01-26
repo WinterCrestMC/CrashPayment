@@ -7,9 +7,7 @@ description: A core that can crash
 depend: []
 softdepend: [Vault, PlaceholderAPI]
 api-version: 1.19
-commands:
-  crashpayments:
-    description: Main command for CrashPayment
+
 permissions:
   payments.give:
     description: Give tokens to a player

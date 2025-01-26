@@ -1,10 +1,18 @@
 package net.crashcraft.crashpayment;
 
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import net.crashcraft.crashpayment.payment.PaymentProvider;
 import net.crashcraft.crashpayment.payment.ProcessorManager;
 import net.crashcraft.crashpayment.payment.ProviderInitializationException;
-import net.crashcraft.crashpayment.payment.commands.TokenCommands;
-import net.crashcraft.crashpayment.payment.commands.TokenCommandsTabComplete;
+import net.crashcraft.crashpayment.payment.commands.TokenCheckCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenConvertCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenFixNegativesCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenGiveCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenSetCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenTakeCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenTopCommand;
+import net.crashcraft.crashpayment.payment.commands.TokenTransferCommand;
 import net.crashcraft.crashpayment.payment.expansions.VirtualTokenExpansion;
 import net.crashcraft.crashpayment.payment.rewards.RewardManager;
 import org.bukkit.Bukkit;
@@ -19,16 +27,33 @@ public class CrashPayment extends JavaPlugin {
     private RewardManager rewardManager;
 
     @Override
+    public void onLoad() {
+        CommandAPI.onLoad(new CommandAPIBukkitConfig(this).setNamespace("claimtokens").silentLogs(true));
+    }
+
+    @Override
     public void onEnable() {
+        CommandAPI.onEnable();
         saveDefaultConfig();
 
-        getServer().getPluginCommand("crashpayments").setExecutor(new TokenCommands());
-        getServer().getPluginCommand("crashpayments").setTabCompleter(new TokenCommandsTabComplete());
+        TokenGiveCommand.register(this);
+        TokenTakeCommand.register(this);
+        TokenSetCommand.register(this);
+        TokenCheckCommand.register(this);
+        TokenConvertCommand.register(this);
+        TokenFixNegativesCommand.register(this);
+        TokenTransferCommand.register(this);
+        TokenTopCommand.register(this);
 
         // Register papi
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new VirtualTokenExpansion().register();
         }
+    }
+
+    @Override
+    public void onDisable() {
+        CommandAPI.onDisable();
     }
 
     public ProcessorManager setupPaymentProvider(JavaPlugin plugin){
