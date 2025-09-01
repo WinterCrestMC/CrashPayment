@@ -2,7 +2,7 @@ import xyz.jpenilla.runtask.RunExtension
 
 plugins {
     id("java")
-    id("xyz.jpenilla.run-paper") version "2.0.0"
+    id("xyz.jpenilla.run-paper") version "2.3.1"
     id("com.gradleup.shadow") version "8.3.0"
 }
 
@@ -64,15 +64,24 @@ dependencies {
 
 tasks.shadowJar {
     relocate("dev.jorel.commandapi", "net.crashcraft.crashpayment.commandapi")
+    manifest {
+        attributes["paperweight-mappings-namespace"] = "mojang"
+    }
 }
 
 tasks.build {
     dependsOn(tasks.shadowJar)
 }
 
+tasks.jar {
+    manifest {
+        attributes["paperweight-mappings-namespace"] = "mojang"
+    }
+}
+
 tasks {
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.8")
         dependsOn(shadowJar)
 
         pluginJars(shadowJar.get().archiveFile.filter { it.asFile.name.contains("-all") })
