@@ -57,16 +57,12 @@ dependencies {
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
-    implementation("dev.jorel:commandapi-bukkit-shade:9.7.0")
+    implementation("dev.jorel:commandapi-bukkit-shade-mojang-mapped:10.1.2")
 }
 
 
 
 tasks.shadowJar {
-    dependencies {
-        include(dependency("dev.jorel:commandapi-bukkit-shade:9.7.0"))
-    }
-
     relocate("dev.jorel.commandapi", "net.crashcraft.crashpayment.commandapi")
 }
 

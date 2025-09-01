@@ -2,6 +2,7 @@ package net.crashcraft.crashpayment.payment.expansions;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.crashcraft.crashpayment.CrashPayment;
+import net.crashcraft.crashpayment.payment.providers.VirtualTokenProvider;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
@@ -19,7 +20,7 @@ public class VirtualTokenExpansion extends PlaceholderExpansion {
     private final CrashPayment plugin = CrashPayment.getInstance();
     @Override
     public @NotNull String getIdentifier() {
-        return "crashpayment_virtualtokens";
+        return "crashpayment";
     }
 
     @Override
@@ -33,21 +34,9 @@ public class VirtualTokenExpansion extends PlaceholderExpansion {
     }
 
     private int getTokens(UUID uuid) {
-        Map<UUID, Integer> tokens = new HashMap<>();
-        File file = new File(plugin.getDataFolder(), "funds.json");
-        try {
-            JSONObject jsonObject = (JSONObject) new JSONParser().parse(new FileReader(file));
-            if (jsonObject == null) {
-                return 0;
-            }
-            for (Object key : jsonObject.keySet()) {
-                tokens.put(UUID.fromString((String) key), ((Long) jsonObject.get(key)).intValue());
-            }
-        } catch (IOException | ParseException e) {
-            plugin.getLogger().severe("Failed to read funds.json");
-            plugin.getLogger().severe(e.getMessage());
-        }
-        return tokens.getOrDefault(uuid, 0);
+        VirtualTokenProvider provider = (VirtualTokenProvider) plugin.getProcessorManager().getProcessor().getProvider();
+
+        return provider.getOrDefault(uuid, 0);
     }
 
     @Override

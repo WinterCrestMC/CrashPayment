@@ -4,7 +4,6 @@ import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.arguments.PlayerArgument;
-import dev.jorel.commandapi.executors.CommandExecutor;
 import java.util.UUID;
 import net.crashcraft.crashpayment.CrashPayment;
 import net.crashcraft.crashpayment.payment.providers.VirtualTokenProvider;
